@@ -87,7 +87,7 @@ Se houver Google Tag Manager, a página envia para o `dataLayer`:
 
 ## Decisões de implementação
 
-- **Situações × Serviços:** a sessão 2 mantém os 4 cartões. A sessão 3 virou uma lista numerada em duas colunas (uma no celular), com divisórias e sem caixas. A gestão de resíduos vem depois dos nove serviços, como uma linha no mesmo padrão dos itens (ícone no lugar do número, sem caixa, cor de destaque ou foto): título à esquerda e texto à direita no desktop, um abaixo do outro no celular. O CTA continua no fim.
+- **Situações × Serviços:** a sessão 2 mantém os 4 cartões. A sessão 3 virou uma lista numerada em duas colunas (uma no celular), com divisórias e sem caixas. A gestão de resíduos vem logo depois dos nove serviços, como último item da lista e no mesmo padrão deles (ícone no lugar do número, sem caixa, cor de destaque ou foto). O CTA continua no fim.
 - **Experiência (sessão 4):** o destaque "5 anos" fica abaixo da foto, sem cobrir o profissional nem os equipamentos.
 - **Antes e depois:** sai do carrossel da galeria e vira um conjunto único, com mais espaço, rótulos visíveis e legenda compartilhada. Fica lado a lado no desktop e empilhado no celular.
 - **Vídeos:** tocam sem som, em loop, só quando estão visíveis, com botão de pausa. Quem ativou "reduzir movimento" ou economia de dados vê os controles nativos, sem reprodução automática.

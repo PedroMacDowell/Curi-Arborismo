@@ -549,19 +549,8 @@ main:focus { outline: none; }
   color: var(--liver-600);
 }
 
-/* Gestão de resíduos: linha após a lista, no padrão dos itens (sem caixa nem cor de destaque).
-   No desktop, título na coluna da esquerda e texto na da direita; no celular, um abaixo do outro. */
-.service-note {
-  display: grid;
-  row-gap: .375rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--line-strong);
-}
-.service-note-part { display: grid; grid-template-columns: auto 1fr; gap: 1.125rem; }
-.service-note .icon { width: 1.5rem; height: 1.5rem; }
-.service-note h3 { font-size: 1.1875rem; }
-.service-note p { font-size: 1rem; color: var(--ink-500); }
-@media (min-width: 900px) { .service-note { grid-template-columns: repeat(2, 1fr); column-gap: clamp(2.5rem, 5vw, 4.5rem); } }
+/* Gestão de resíduos: último item da lista, com ícone no lugar do número */
+.service-num .icon { width: 1.5rem; height: 1.5rem; }
 
 .section-cta { display: flex; justify-content: center; margin-top: clamp(2rem, 1.5rem + 2vw, 3rem); }
 
