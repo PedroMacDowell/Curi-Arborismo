@@ -4,6 +4,7 @@ Landing page estática (HTML, CSS e JS puros, sem build). Basta publicar a pasta
 
 ```
 index.html
+enviado.html       ← página de confirmação do formulário (envios com fotos)
 assets/
   css/styles.css
   js/config.js     ← tudo o que está pendente se configura aqui
@@ -36,7 +37,7 @@ Segue o manual "Identidade visual Curi Arborismo – v01".
 
 | Pendência | Onde resolver | Enquanto não resolver |
 |---|---|---|
-| Destino do formulário | `config.js` → `form.endpoint` | O envio mostra a mensagem de erro com link para o WhatsApp, nunca um falso sucesso. **Depois de configurar, confirmar que os dados e os anexos chegam** |
+| Ativação do e-mail do formulário | Fazer um envio pela página e clicar em "Activate Form" no e-mail que o FormSubmit manda para `curiarborismogestao@gmail.com` (`config.js` → `form.to`) | O envio mostra a mensagem de erro com link para o WhatsApp, e esse primeiro envio não é entregue. **Depois de ativar, confirmar que os dados e os anexos chegam** |
 | Política de privacidade | `config.js` → `privacy.url` e `privacy.notice` (texto provisório) | O aviso aparece junto ao formulário sem link, e o link do rodapé fica oculto |
 | Avaliações do Google | `config.js` → `google` (ou trocar o bloco pelo plugin do Google) | Só a versão de revisão mostra os 5 cartões de exemplo |
 | Versão pública | `config.js` → `reviewMode: false` | A página está como **versão de revisão** (`reviewMode: true`) |
@@ -66,10 +67,15 @@ O link de WhatsApp da mensagem de erro do formulário também usa `final`. Não 
 
 ## Formulário
 
-- Envia `multipart/form-data` por POST com estes campos: `nome`, `whatsapp`, `whatsapp_e164`, `cidade_bairro`, `tipo_local`, `mensagem`, `fotos` (0 a 5 arquivos), `origem` e `pagina`, além de UTMs e gclid/fbclid quando existirem.
-- Obrigatórios: nome, WhatsApp, cidade e bairro, tipo de local e descrição. Fotos são opcionais: até 5 imagens, 10 MB cada, nos formatos JPG, PNG, WEBP ou HEIC.
-- O sucesso só aparece quando o destino responde com status 2xx. O destino precisa aceitar CORS da origem do site.
-- Funciona com Formspree (upload de arquivos exige plano pago), Getform, Basin, Make/n8n (webhook) ou um backend próprio.
+- **Destino:** [FormSubmit](https://formsubmit.co), que encaminha cada envio para um e-mail, sem conta nem backend. O endereço fica em `form.to` e entra nas duas URLs de envio no lugar de `{to}`.
+- **Ativação:** o primeiro envio para cada endereço não entrega nada, só dispara um e-mail do FormSubmit com o link "Activate Form". Depois de clicar, os envios seguintes chegam. O mesmo e-mail traz um código que pode substituir o endereço na URL, para ele não ficar visível no código-fonte.
+- **Para trocar o e-mail:** alterar `form.to`, fazer um envio pela página e ativar pelo link que chegar na nova caixa.
+- **Sem fotos:** vai por `fetch` para `form.endpoint` (`/ajax`), que responde em JSON.
+- **Com fotos:** o endereço `/ajax` do FormSubmit entrega os campos, mas descarta os anexos. Por isso o envio vai por POST clássico para `form.uploadEndpoint`, dentro de um iframe oculto, e a pessoa não sai da página. Como a resposta de outra origem não pode ser lida, a confirmação é o FormSubmit redirecionar o iframe para `enviado.html` (campo `_next`). Se isso não acontecer, aparece a mensagem de erro.
+- Envia `multipart/form-data` por POST com estes campos: `nome`, `whatsapp`, `whatsapp_e164`, `cidade_bairro`, `tipo_local`, `mensagem`, `foto_1` a `foto_5` (0 a 5 arquivos), `origem` e `pagina`, além de UTMs e gclid/fbclid quando existirem. Os campos de `form.extraFields` (assunto e formato do e-mail) vão junto.
+- Obrigatórios: nome, WhatsApp, cidade e bairro, tipo de local e descrição. Fotos são opcionais: até 5 imagens nos formatos JPG, PNG, WEBP ou HEIC, somando até 10 MB (limite de anexos do FormSubmit, em `form.maxTotalMB`).
+- O sucesso só aparece quando o destino confirma o recebimento. Sem fotos: status 2xx e, se a resposta for JSON, sem `success: "false"` (é assim que o FormSubmit avisa que o e-mail ainda não foi ativado). Com fotos: o redirecionamento para `enviado.html`.
+- Para usar outro destino (Getform, Basin, Make/n8n ou backend próprio), basta trocar `form.endpoint` e ajustar `fileField`, `extraFields` e os limites. Se ele aceitar anexos por `fetch` (com CORS liberado para a origem do site), deixe `form.uploadEndpoint` vazio.
 - Tem campo anti-spam invisível (`site`), validação acessível e máscara de telefone.
 
 ## Métricas
@@ -81,7 +87,7 @@ Se houver Google Tag Manager, a página envia para o `dataLayer`:
 
 ## Decisões de implementação
 
-- **Situações × Serviços:** a sessão 2 mantém os 4 cartões. A sessão 3 virou uma lista numerada em duas colunas (uma no celular), com divisórias e sem caixas. O bloco de gestão de resíduos ganhou a foto das toras organizadas no local, e o CTA continua no fim.
+- **Situações × Serviços:** a sessão 2 mantém os 4 cartões. A sessão 3 virou uma lista numerada em duas colunas (uma no celular), com divisórias e sem caixas. A gestão de resíduos vem depois dos nove serviços, como uma linha no mesmo padrão dos itens (ícone no lugar do número, sem caixa, cor de destaque ou foto): título à esquerda e texto à direita no desktop, um abaixo do outro no celular. O CTA continua no fim.
 - **Experiência (sessão 4):** o destaque "5 anos" fica abaixo da foto, sem cobrir o profissional nem os equipamentos.
 - **Antes e depois:** sai do carrossel da galeria e vira um conjunto único, com mais espaço, rótulos visíveis e legenda compartilhada. Fica lado a lado no desktop e empilhado no celular.
 - **Vídeos:** tocam sem som, em loop, só quando estão visíveis, com botão de pausa. Quem ativou "reduzir movimento" ou economia de dados vê os controles nativos, sem reprodução automática.
@@ -89,7 +95,7 @@ Se houver Google Tag Manager, a página envia para o `dataLayer`:
 
 ## Checklist antes de publicar
 
-- [ ] Configurar `form.endpoint` e testar o recebimento com e sem fotos
+- [ ] Ativar `curiarborismogestao@gmail.com` pelo link do FormSubmit e testar o recebimento com e sem fotos
 - [ ] Preencher `privacy.url` e o texto definitivo de `privacy.notice`
 - [ ] Mudar `reviewMode` para `false` (ou conectar as avaliações reais do Google)
 - [ ] Confirmar os itens de `SELECAO-FOTOS.md` e aplicar as fotos escolhidas pelo Lucas

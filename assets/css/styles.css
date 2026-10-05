@@ -549,27 +549,19 @@ main:focus { outline: none; }
   color: var(--liver-600);
 }
 
-.waste-block {
-  --heading: var(--cornsilk);
+/* Gestão de resíduos: linha após a lista, no padrão dos itens (sem caixa nem cor de destaque).
+   No desktop, título na coluna da esquerda e texto na da direita; no celular, um abaixo do outro. */
+.service-note {
   display: grid;
-  overflow: hidden;
-  margin-top: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
-  border-radius: var(--radius-lg);
-  background: var(--kombu);
-  color: rgba(254, 250, 224, .86);
-  box-shadow: var(--shadow);
+  row-gap: .375rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line-strong);
 }
-.waste-media img { width: 100%; height: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
-.waste-body { display: flex; flex-direction: column; align-items: flex-start; gap: .875rem; padding: clamp(1.5rem, 1rem + 2vw, 2.5rem); }
-.waste-body h3 { font-size: 1.3125rem; }
-.waste-body p { max-width: 46em; font-size: 1.0625rem; }
-@media (min-width: 900px) {
-  .waste-block { grid-template-columns: minmax(280px, 34%) 1fr; align-items: stretch; }
-  /* A foto acompanha a altura do texto em vez de impor a sua */
-  .waste-media { position: relative; min-height: 260px; }
-  .waste-media img { position: absolute; inset: 0; aspect-ratio: auto; }
-  .waste-body { justify-content: center; }
-}
+.service-note-part { display: grid; grid-template-columns: auto 1fr; gap: 1.125rem; }
+.service-note .icon { width: 1.5rem; height: 1.5rem; }
+.service-note h3 { font-size: 1.1875rem; }
+.service-note p { font-size: 1rem; color: var(--ink-500); }
+@media (min-width: 900px) { .service-note { grid-template-columns: repeat(2, 1fr); column-gap: clamp(2.5rem, 5vw, 4.5rem); } }
 
 .section-cta { display: flex; justify-content: center; margin-top: clamp(2rem, 1.5rem + 2vw, 3rem); }
 

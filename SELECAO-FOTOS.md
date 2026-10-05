@@ -16,7 +16,6 @@ Os números (#) seguem a ordem do álbum.
 | Sessão 5 · Antes e depois | #67 + #72 (nov/2022) | Remoção (árvore seca → toco e toras), em bloco comparativo próprio abaixo da galeria | `galeria-antes/depois-remocao` |
 | Sessão 5 · Galeria | #133 (set/2024) | Desmontagem de árvore alta, arborista no topo do tronco | `galeria-desmontagem-tronco` |
 | Sessão 5 · Galeria | vídeo #105 (fev/2023) | Desmontagem de árvore tombada | `video/v105.mp4` |
-| Sessão 3 · Gestão de resíduos | #109 (fev/2023) | Toras cortadas e organizadas no local (mesmo trabalho do #105). Ilustra a opção "cortado e organizado no local" | `galeria-material-organizado` |
 | Sessão 5 · Galeria | #88 (fev/2023) | Acesso por cordas em coqueiro | `galeria-coqueiro` |
 | Prévia de compartilhamento | #124 (mar/2023) | Arborista na copa com motosserra, com o logo da Curi aplicado à esquerda (aparece ao enviar o link no WhatsApp) | `img/og-image.jpg` |
 
@@ -36,6 +35,7 @@ Os números (#) seguem a ordem do álbum.
 - **Autoridade:** #112 (3000 px, rosto visível, cadeirinha e cordas), #103 (motosserra na desmontagem).
 - **Equipe:** #46/#47 (equipe reunida sobre um tronco; selfie com capacete de obra e óculos escuros, então fica mais informal).
 - **Equipamentos:** #58 (cadeirinha, mosquetões e cordas pendurados), vídeo #74 (motosserra).
+- **Material organizado:** #109 (fev/2023, toras cortadas e empilhadas no local, mesmo trabalho do #105). Saiu da sessão 3 quando a gestão de resíduos deixou de ter destaque e foto; os arquivos `galeria-material-organizado` continuam em `assets/img/fotos/`.
 - **Mais vídeos bons:** #33 (outro ângulo da descida de galho do #34), #35 e #43 (desmontagem do tronco junto ao sobrado), #128 (arborista descendo após a poda), #131 (copa já podada).
 - **Vídeos recentes em primeira pessoa (#149 a #156, 2025):** o Lucas fala para a câmera do alto das árvores. Funcionam melhor em Instagram ou Reels do que na LP, porque a página toda o vídeo sem som.
 

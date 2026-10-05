@@ -291,7 +291,15 @@
     var form = $('[data-lead-form]');
     if (!form) return;
 
-    var cfg = Object.assign({ endpoint: '', fileField: 'fotos', maxFiles: 5, maxFileSizeMB: 10, timeoutMs: 60000 }, CONFIG.form || {});
+    var cfg = Object.assign({ to: '', endpoint: '', uploadEndpoint: '', confirmPage: 'enviado.html', fileField: 'fotos', extraFields: null, maxFiles: 5, maxFileSizeMB: 10, maxTotalMB: 0, timeoutMs: 60000 }, CONFIG.form || {});
+    // {to} nas URLs vira o destinatário configurado; sem destinatário, a URL fica vazia
+    function destination(url) {
+      url = String(url || '');
+      if (url.indexOf('{to}') < 0) return url;
+      return cfg.to ? url.replace('{to}', cfg.to) : '';
+    }
+    var endpoint = destination(cfg.endpoint);
+    var uploadEndpoint = destination(cfg.uploadEndpoint);
     var MSG = {
       required: 'Preencha este campo para continuar.',
       phone: 'Confira o número de WhatsApp e inclua o DDD.',
@@ -396,9 +404,13 @@
     var ACCEPT_MIME = /^image\/(jpeg|png|webp|heic|heif)$/i;
     var ACCEPT_EXT = /\.(jpe?g|png|webp|heic|heif)$/i;
     var maxBytes = cfg.maxFileSizeMB * 1024 * 1024;
+    var maxTotalBytes = (cfg.maxTotalMB || 0) * 1024 * 1024;
 
     var limits = $('[data-file-limits]', form);
-    if (limits) limits.textContent = 'Até ' + cfg.maxFiles + ' imagens (JPG, PNG, WEBP ou HEIC), com até ' + cfg.maxFileSizeMB + ' MB cada.';
+    if (limits) {
+      limits.textContent = 'Até ' + cfg.maxFiles + ' imagens (JPG, PNG, WEBP ou HEIC), ' +
+        (maxTotalBytes ? 'somando até ' + cfg.maxTotalMB + ' MB.' : 'com até ' + cfg.maxFileSizeMB + ' MB cada.');
+    }
 
     function formatSize(bytes) {
       if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + ' KB';
@@ -412,13 +424,16 @@
     }
 
     function addFiles(list) {
-      var rejected = { type: 0, size: 0, count: 0 };
+      var rejected = { type: 0, size: 0, count: 0, sum: 0 };
+      var usedBytes = files.reduce(function (sum, x) { return sum + x.file.size; }, 0);
       Array.prototype.forEach.call(list, function (f) {
         if (!ACCEPT_MIME.test(f.type) && !ACCEPT_EXT.test(f.name)) { rejected.type++; return; }
         if (f.size > maxBytes) { rejected.size++; return; }
         var duplicate = files.some(function (x) { return x.file.name === f.name && x.file.size === f.size && x.file.lastModified === f.lastModified; });
         if (duplicate) return;
         if (files.length >= cfg.maxFiles) { rejected.count++; return; }
+        if (maxTotalBytes && usedBytes + f.size > maxTotalBytes) { rejected.sum++; return; }
+        usedBytes += f.size;
         files.push({ file: f, url: /^image\/(jpeg|png|webp)$/i.test(f.type) ? URL.createObjectURL(f) : null });
       });
 
@@ -426,7 +441,8 @@
       if (rejected.type) reasons.push('Envie imagens nos formatos JPG, PNG, WEBP ou HEIC.');
       if (rejected.size) reasons.push('Cada imagem pode ter até ' + cfg.maxFileSizeMB + ' MB.');
       if (rejected.count) reasons.push('Você pode enviar até ' + cfg.maxFiles + ' imagens.');
-      var total = rejected.type + rejected.size + rejected.count;
+      if (rejected.sum) reasons.push('Juntas, as imagens podem somar até ' + cfg.maxTotalMB + ' MB.');
+      var total = rejected.type + rejected.size + rejected.count + rejected.sum;
       showFileNotice(total ? (total === 1 ? 'Uma imagem não foi adicionada. ' : total + ' imagens não foram adicionadas. ') + reasons.join(' ') : '');
       renderFiles();
     }
@@ -522,6 +538,99 @@
       success.focus();
     }
 
+    function sendByFetch(data) {
+      var controller = 'AbortController' in window ? new AbortController() : null;
+      var timer = controller ? setTimeout(function () { controller.abort(); }, cfg.timeoutMs) : null;
+      function clear() { if (timer) clearTimeout(timer); }
+
+      return fetch(endpoint, {
+        method: 'POST',
+        body: data,
+        headers: { Accept: 'application/json' },
+        signal: controller ? controller.signal : undefined
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json().catch(function () { return null; });
+        })
+        .then(function (body) {
+          clear();
+          // Há destinos (como o FormSubmit) que respondem 200 com success "false" quando recusam o envio
+          if (body && String(body.success) === 'false') throw new Error(body.message || 'Envio recusado pelo destino');
+        }, function (err) {
+          clear();
+          throw err;
+        });
+    }
+
+    // POST clássico em um iframe oculto, para destinos que só aceitam anexos fora do endpoint AJAX.
+    // A resposta vem de outra origem e não pode ser lida: a confirmação é o destino redirecionar o
+    // iframe para a página de confirmação deste site (campo _next).
+    function sendInFrame(data) {
+      return new Promise(function (resolve, reject) {
+        var frame = document.createElement('iframe');
+        var post = document.createElement('form');
+        var done = false;
+        var graceTimer = null;
+        var timer = setTimeout(function () { finish(new Error('Tempo esgotado')); }, cfg.timeoutMs);
+
+        function finish(err) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          clearTimeout(graceTimer);
+          post.remove();
+          frame.remove();
+          if (err) reject(err); else resolve();
+        }
+
+        try {
+          frame.name = 'curi-envio-' + Date.now();
+          frame.hidden = true;
+          frame.tabIndex = -1;
+          frame.setAttribute('aria-hidden', 'true');
+
+          post.method = 'POST';
+          post.enctype = 'multipart/form-data';
+          post.action = uploadEndpoint;
+          post.target = frame.name;
+          post.hidden = true;
+
+          data.set('_next', new URL(cfg.confirmPage, location.href).href);
+          data.forEach(function (value, key) {
+            var input = document.createElement('input');
+            input.name = key;
+            if (typeof value === 'string') {
+              input.type = 'hidden';
+              input.value = value;
+            } else {
+              var transfer = new DataTransfer();
+              transfer.items.add(value);
+              input.type = 'file';
+              input.files = transfer.files;
+            }
+            post.appendChild(input);
+          });
+
+          frame.addEventListener('load', function () {
+            var href = null;
+            try { href = frame.contentWindow.location.href; } catch (err) { /* outra origem: página do próprio destino */ }
+            if (href === 'about:blank') return; // carregamento inicial do iframe vazio
+            if (href !== null) { finish(); return; } // voltou para este site: envio aceito
+            // Página do destino: aguarda um eventual redirecionamento antes de considerar falha
+            clearTimeout(graceTimer);
+            graceTimer = setTimeout(function () { finish(new Error('O destino não confirmou o recebimento')); }, 4000);
+          });
+
+          document.body.appendChild(frame);
+          document.body.appendChild(post);
+          post.submit();
+        } catch (err) {
+          finish(err);
+        }
+      });
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (sending) return;
@@ -533,7 +642,7 @@
       var invalid = validateAll();
       if (invalid) { invalid.focus(); return; }
 
-      if (!cfg.endpoint) {
+      if (!endpoint) {
         console.warn('[Curi] Destino do formulário não configurado em assets/js/config.js (form.endpoint).');
         showError();
         return;
@@ -542,7 +651,8 @@
       var data = new FormData(form);
       data.delete('site');
       data.delete(fileInput ? fileInput.name : 'fotos');
-      files.forEach(function (item) { data.append(cfg.fileField, item.file, item.file.name); });
+      files.forEach(function (item, i) { data.append(cfg.fileField.replace('{n}', i + 1), item.file, item.file.name); });
+      Object.keys(cfg.extraFields || {}).forEach(function (k) { data.append(k, cfg.extraFields[k]); });
       data.set('whatsapp', formatPhone(phoneInput.value));
       data.append('whatsapp_e164', '+55' + phoneDigits(phoneInput.value));
       data.append('origem', 'LP Curi Arborismo');
@@ -551,17 +661,9 @@
 
       var photoCount = files.length;
       setSending(true);
-      var controller = 'AbortController' in window ? new AbortController() : null;
-      var timer = controller ? setTimeout(function () { controller.abort(); }, cfg.timeoutMs) : null;
 
-      fetch(cfg.endpoint, {
-        method: 'POST',
-        body: data,
-        headers: { Accept: 'application/json' },
-        signal: controller ? controller.signal : undefined
-      })
-        .then(function (res) {
-          if (!res.ok) throw new Error('HTTP ' + res.status);
+      (photoCount && uploadEndpoint ? sendInFrame(data) : sendByFetch(data))
+        .then(function () {
           // Sucesso somente após confirmação de recebimento pelo destino
           showSuccess();
           track('generate_lead', { form: 'avaliacao_orcamento', fotos: photoCount });
@@ -570,10 +672,7 @@
           console.error('[Curi] Falha no envio do formulário:', err);
           showError();
         })
-        .then(function () {
-          if (timer) clearTimeout(timer);
-          setSending(false);
-        });
+        .then(function () { setSending(false); });
     });
   })();
 

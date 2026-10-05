@@ -27,13 +27,32 @@ window.CURI_CONFIG = {
   },
 
   form: {
-    // PENDENTE: URL que recebe o POST multipart (Formspree, Getform, Make, n8n, backend próprio...).
-    // O sucesso só aparece quando essa URL responde com status 2xx.
-    endpoint: "",
-    fileField: "fotos",
-    // PENDENTE: confirmar limites de upload com quem vai receber os dados.
+    // Destino: FormSubmit (formsubmit.co), que encaminha cada envio para um e-mail, sem conta nem backend.
+    // PENDENTE: ativar este endereço. O primeiro envio só dispara um e-mail do FormSubmit com o link
+    // "Activate Form"; é preciso clicar nele para os envios seguintes chegarem.
+    // Esse e-mail traz também um código que pode entrar aqui no lugar do endereço, para ele não
+    // ficar visível no código-fonte.
+    to: "curiarborismogestao@gmail.com",
+    // Nas duas URLs, {to} é trocado pelo valor acima.
+    // Envios sem fotos: resposta em JSON, e o sucesso só aparece quando o destino confirma o recebimento.
+    endpoint: "https://formsubmit.co/ajax/{to}",
+    // Envios com fotos: o endereço /ajax do FormSubmit descarta anexos, então vão por POST clássico em um
+    // iframe oculto. O sucesso só aparece quando o destino redireciona para a página de confirmação abaixo.
+    // Deixe vazio se o destino aceitar anexos no endpoint acima.
+    uploadEndpoint: "https://formsubmit.co/{to}",
+    confirmPage: "enviado.html",
+    // {n} vira 1, 2, 3...: cada foto vai em um campo próprio (foto_1, foto_2...).
+    fileField: "foto_{n}",
+    // Campos de controle do destino, enviados junto com os dados (assunto e formato do e-mail).
+    extraFields: {
+      _subject: "Nova solicitação de avaliação · LP Curi Arborismo",
+      _template: "table",
+      _captcha: "false"
+    },
     maxFiles: 5,
     maxFileSizeMB: 10,
+    // O FormSubmit aceita até 10 MB somando todos os anexos. Use 0 se o destino não tiver limite total.
+    maxTotalMB: 10,
     timeoutMs: 60000
   },
 
