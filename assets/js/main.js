@@ -81,85 +81,149 @@
     return 'https://wa.me/' + waNumber + (text ? '?text=' + encodeURIComponent(text) : '');
   }
 
+  // Os links já vêm prontos no HTML (funcionam sem JS); aqui eles seguem o config.js e registram o clique
   (function whatsappLinks() {
-    var links = $$('[data-wa]');
-    if (!waNumber) {
-      if (links.length) console.warn('[Curi] Número de WhatsApp não configurado em assets/js/config.js. Os botões levam ao formulário.');
-      return;
-    }
-    links.forEach(function (a) {
-      a.href = waUrl(a.getAttribute('data-wa'));
-      a.target = '_blank';
-      a.rel = 'noopener';
-      var hint = document.createElement('span');
-      hint.className = 'sr-only';
-      hint.textContent = ' (abre o WhatsApp)';
-      a.appendChild(hint);
+    $$('[data-wa]').forEach(function (a) {
+      if (waNumber) a.href = waUrl(a.getAttribute('data-wa'));
       a.addEventListener('click', function () {
         track('whatsapp_click', { cta_location: a.getAttribute('data-wa-location') || a.getAttribute('data-wa') });
       });
     });
   })();
 
-  /* Avaliações do Google -------------------------------------------------- */
+  /* Avaliações ------------------------------------------------------------ */
+  // Com dados do Google no config.js: mostra nota, quantidade e comentários reais.
+  // Sem eles: os 5 cartões de exemplo aparecem só na versão de revisão (reviewMode ou ?revisao=1).
   (function reviews() {
     var box = $('[data-reviews]');
-    var g = CONFIG.google;
-    if (!box || !g || !(g.rating > 0) || !(g.count > 0) || !g.url) return;
-
-    var rating = Math.min(Math.max(Number(g.rating), 0), 5);
-    var ratingText = rating.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-
-    $('[data-rating-value]', box).textContent = ratingText;
-    var stars = $('[data-rating-stars]', box);
-    stars.style.setProperty('--rating', rating);
-    stars.setAttribute('aria-label', 'Nota ' + ratingText + ' de 5');
-    $('[data-rating-count]', box).textContent = 'com ' + Number(g.count).toLocaleString('pt-BR') + ' avaliações no Google';
-    $('[data-reviews-link]', box).href = g.url;
-
+    if (!box) return;
     var list = $('[data-review-list]', box);
-    (g.reviews || []).slice(0, 3).forEach(function (r) {
-      if (!r || !r.text) return;
-      var li = document.createElement('li');
-      li.className = 'review-card';
-      var quote = document.createElement('blockquote');
-      var p = document.createElement('p');
-      p.textContent = r.text;
-      quote.appendChild(p);
-      li.appendChild(quote);
-      if (r.author) {
-        var author = document.createElement('p');
-        author.className = 'review-author';
-        author.textContent = r.author;
-        li.appendChild(author);
-      }
-      list.appendChild(li);
-    });
+    var g = CONFIG.google;
+    var hasGoogle = !!(g && g.rating > 0 && g.count > 0 && g.url);
+    var reviewMode = CONFIG.reviewMode === true || new URLSearchParams(location.search).has('revisao');
+
+    if (hasGoogle) {
+      $$('[data-review-demo]', list).forEach(function (el) { el.remove(); });
+      var demoNote = $('[data-reviews-demo-note]', box);
+      if (demoNote) demoNote.remove();
+
+      var rating = Math.min(Math.max(Number(g.rating), 0), 5);
+      var ratingText = rating.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      $('[data-rating-value]', box).textContent = ratingText;
+      var stars = $('[data-rating-stars]', box);
+      stars.style.setProperty('--rating', rating);
+      stars.setAttribute('aria-label', 'Nota ' + ratingText + ' de 5');
+      $('[data-rating-count]', box).textContent = 'com ' + Number(g.count).toLocaleString('pt-BR') + ' avaliações no Google';
+      $('[data-rating-summary]', box).hidden = false;
+      var link = $('[data-reviews-link]', box);
+      link.href = g.url;
+      link.hidden = false;
+
+      (g.reviews || []).forEach(function (r) {
+        if (!r || !r.text) return;
+        var li = document.createElement('li');
+        li.className = 'review-card';
+        li.innerHTML = '<svg class="review-quote" aria-hidden="true"><use href="#i-quote"/></svg>';
+        var quote = document.createElement('blockquote');
+        var p = document.createElement('p');
+        p.textContent = r.text;
+        quote.appendChild(p);
+        li.appendChild(quote);
+        if (r.author) {
+          var author = document.createElement('p');
+          author.className = 'review-author';
+          author.textContent = r.author;
+          li.appendChild(author);
+        }
+        list.appendChild(li);
+      });
+    } else if (!reviewMode) {
+      return; // versão pública sem avaliações reais: o bloco continua oculto
+    }
+
     box.hidden = false;
+    carousel(box);
   })();
 
+  // Carrossel por rolagem com encaixe: 3 cartões no desktop, 2 no tablet, 1 no celular. Sem avanço automático.
+  function carousel(box) {
+    var track = $('[data-review-list]', box);
+    var prev = $('[data-carousel-prev]', box);
+    var next = $('[data-carousel-next]', box);
+    var status = $('[data-carousel-status]', box);
+    var controls = $('[data-carousel-controls]', box);
+    var cards = $$('.review-card', track);
+    if (!track || !cards.length) { if (controls) controls.hidden = true; return; }
+
+    function step() {
+      if (cards.length < 2) return track.clientWidth;
+      return cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().left;
+    }
+    function visibleCount(s) {
+      var gap = s - cards[0].getBoundingClientRect().width;
+      return Math.max(1, Math.min(cards.length, Math.round((track.clientWidth + gap) / s)));
+    }
+    // aria-disabled em vez de disabled: o foco não se perde quando o botão chega ao fim
+    function setDisabled(btn, off) {
+      btn.setAttribute('aria-disabled', String(off));
+    }
+
+    var lastText = '';
+    function update() {
+      var s = step();
+      var visible = visibleCount(s);
+      var total = cards.length;
+      var first = Math.max(0, Math.min(Math.round(track.scrollLeft / s), total - visible));
+      var text = visible > 1
+        ? (first + 1) + '–' + (first + visible) + ' de ' + total
+        : (first + 1) + ' de ' + total;
+      if (text !== lastText) { status.textContent = text; lastText = text; }
+      setDisabled(prev, track.scrollLeft <= 2);
+      setDisabled(next, track.scrollLeft + track.clientWidth >= track.scrollWidth - 2);
+      controls.hidden = total <= visible;
+    }
+
+    function go(dir) {
+      track.scrollBy({ left: dir * step(), behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
+    prev.addEventListener('click', function () { if (prev.getAttribute('aria-disabled') !== 'true') go(-1); });
+    next.addEventListener('click', function () { if (next.getAttribute('aria-disabled') !== 'true') go(1); });
+
+    var ticking = false;
+    function schedule() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () { update(); ticking = false; });
+    }
+    track.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
+  }
+
   /* Política de privacidade ----------------------------------------------- */
+  // O aviso aparece junto ao formulário; o link só entra quando houver URL real (nunca um link sem destino).
   (function privacy() {
     var p = CONFIG.privacy || {};
-    if (!p.url) return;
     var footerLink = $('[data-privacy-link]');
-    if (footerLink) { footerLink.href = p.url; footerLink.hidden = false; }
+    if (footerLink && p.url) { footerLink.href = p.url; footerLink.hidden = false; }
 
     var note = $('[data-privacy-note]');
     if (!note || !p.notice) return;
-    var parts = String(p.notice).split('{link}');
-    note.textContent = '';
-    parts.forEach(function (part, i) {
-      note.appendChild(document.createTextNode(part));
-      if (i < parts.length - 1) {
-        var a = document.createElement('a');
-        a.href = p.url;
-        a.target = '_blank';
-        a.rel = 'noopener';
-        a.textContent = 'Política de Privacidade';
-        note.appendChild(a);
-      }
-    });
+    note.textContent = p.notice;
+    if (p.url && p.linkSentence) {
+      note.appendChild(document.createTextNode(' '));
+      String(p.linkSentence).split('{link}').forEach(function (part, i, parts) {
+        note.appendChild(document.createTextNode(part));
+        if (i < parts.length - 1) {
+          var a = document.createElement('a');
+          a.href = p.url;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.textContent = 'Política de Privacidade';
+          note.appendChild(a);
+        }
+      });
+    }
     note.hidden = false;
   })();
 

@@ -13,12 +13,14 @@ Os números (#) seguem a ordem do álbum.
 | Sessão 5 · Galeria | vídeo #34 (ago/2022) | Descida controlada de galho com cordas, ao lado de um sobrado | `video/v034.mp4` |
 | Sessão 5 · Galeria | #4 (jan/2022) | Palmeira com folhas secas, arborista com acesso por cordas | `galeria-palmeira-folhas-secas` |
 | Sessão 5 · Galeria | vídeo #126 (mar/2023) | Poda em copa de grande porte, arborista ancorado | `video/v126.mp4` |
-| Sessão 5 · Galeria | #67 + #72 (nov/2022) | Antes e depois de remoção (árvore seca → toco e toras) | `galeria-antes/depois-remocao` |
+| Sessão 5 · Antes e depois | #67 + #72 (nov/2022) | Remoção (árvore seca → toco e toras), em bloco comparativo próprio abaixo da galeria | `galeria-antes/depois-remocao` |
 | Sessão 5 · Galeria | #133 (set/2024) | Desmontagem de árvore alta, arborista no topo do tronco | `galeria-desmontagem-tronco` |
 | Sessão 5 · Galeria | vídeo #105 (fev/2023) | Desmontagem de árvore tombada | `video/v105.mp4` |
-| Sessão 5 · Galeria | #109 (fev/2023) | Toras cortadas e organizadas no local (mesmo trabalho do #105) | `galeria-material-organizado` |
+| Sessão 3 · Gestão de resíduos | #109 (fev/2023) | Toras cortadas e organizadas no local (mesmo trabalho do #105). Ilustra a opção "cortado e organizado no local" | `galeria-material-organizado` |
 | Sessão 5 · Galeria | #88 (fev/2023) | Acesso por cordas em coqueiro | `galeria-coqueiro` |
-| Prévia de compartilhamento | #124 (mar/2023) | Arborista na copa com motosserra (aparece ao enviar o link no WhatsApp) | `img/og-image.jpg` |
+| Prévia de compartilhamento | #124 (mar/2023) | Arborista na copa com motosserra, com o logo da Curi aplicado à esquerda (aparece ao enviar o link no WhatsApp) | `img/og-image.jpg` |
+
+**Etapa final (feedback de 01/10/2026):** o Lucas escolhe as fotos depois que o restante for aprovado. Até lá, só os espaços e os componentes do layout mudam; não há pedido de novas fotos, correção de exposição ou reenquadramento. As duas imagens do antes e depois precisam mostrar o mesmo trabalho.
 
 ## Confirmar com o Lucas antes de publicar
 

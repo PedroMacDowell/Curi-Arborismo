@@ -8,29 +8,66 @@ assets/
   css/styles.css
   js/config.js     ← tudo o que está pendente se configura aqui
   js/main.js
-  img/             ← favicon, og-image e fotos (WebP em 2 tamanhos)
+  img/             ← favicon, apple-touch-icon, og-image e fotos (WebP em 2 tamanhos)
+  img/marca/       ← logo horizontal, vertical e símbolo em SVG (cor Kombu)
   video/           ← clipes da galeria (MP4 sem áudio + poster)
 SELECAO-FOTOS.md   ← origem de cada foto e o que confirmar com o cliente
 ```
 
-Para testar localmente: `python -m http.server 8080` na pasta e abrir http://localhost:8080.
+Para testar localmente: `python -m http.server 8080` (ou `npx serve`) na pasta e abrir http://localhost:8080.
 
-## Pendências (do documento de copy)
+## Identidade visual
+
+Segue o manual "Identidade visual Curi Arborismo – v01".
+
+| Cor | Hex | Uso na página |
+|---|---|---|
+| Kombu Green | `#283618` | Cabeçalho, hero, contato, rodapé, títulos |
+| Dark Olive Green | `#606C38` | Sessão 4 (diferenciais), sobretítulos, foco |
+| Cornsilk | `#FEFAE0` | Fundo das sessões claras e texto sobre fundo escuro |
+| Fawn | `#DDA15E` | Destaques sobre fundo escuro, linha do horizonte, rótulo "Depois" |
+| Liver (dogs) | `#BC6C25` | Detalhes (estrelas, borda da citação). Nos botões e números usa-se `#A65E1F`, um tom um pouco mais escuro, para o texto creme passar no contraste AA |
+
+- **Tipografia:** Quicksand (Google Fonts) em títulos e textos. A Giker aparece só no logotipo, que entra vetorizado, então não é preciso carregar a fonte.
+- **Logo:** o horizontal (cabeçalho e rodapé) e o símbolo (marca d'água no hero, no contato e no cartão de área) estão no sprite SVG do `index.html` e herdam a cor por `currentColor`. Foram vetorizados a partir dos PNG finais. Se o designer enviar os SVG oficiais, basta trocar o `d` dos símbolos `#logo-h` e `#logo-mark` e os arquivos de `assets/img/marca/`.
+- **Motivos da marca:** fotos com topo em arco e uma linha de horizonte embaixo (como no símbolo), e um meio-sol antes de cada sobretítulo.
+
+## Pendências
 
 | Pendência | Onde resolver | Enquanto não resolver |
 |---|---|---|
-| Número do WhatsApp comercial | `config.js` → `whatsapp.number` (ex.: `5521999999999`) | Os botões levam ao formulário |
-| Destino do formulário | `config.js` → `form.endpoint` | O envio mostra a mensagem de erro com link para o WhatsApp, nunca um falso sucesso |
-| Limites de upload | `config.js` → `form.maxFiles` / `maxFileSizeMB` (hoje 5 imagens de 10 MB) | Valem os padrões |
-| Política de privacidade | `config.js` → `privacy.url` e `privacy.notice` | O aviso do formulário e o link do rodapé ficam ocultos |
-| Nota, quantidade e depoimentos do Google | `config.js` → `google` | O bloco de avaliações fica oculto (a galeria continua visível) |
-| Logo final | `index.html` (cabeçalho e rodapé) e `assets/img/favicon.svg` | Usa uma marca provisória (anéis de crescimento) |
+| Destino do formulário | `config.js` → `form.endpoint` | O envio mostra a mensagem de erro com link para o WhatsApp, nunca um falso sucesso. **Depois de configurar, confirmar que os dados e os anexos chegam** |
+| Política de privacidade | `config.js` → `privacy.url` e `privacy.notice` (texto provisório) | O aviso aparece junto ao formulário sem link, e o link do rodapé fica oculto |
+| Avaliações do Google | `config.js` → `google` (ou trocar o bloco pelo plugin do Google) | Só a versão de revisão mostra os 5 cartões de exemplo |
+| Versão pública | `config.js` → `reviewMode: false` | A página está como **versão de revisão** (`reviewMode: true`) |
+| Fotos finais | Ver `SELECAO-FOTOS.md`. A escolha é do Lucas, depois que o restante for aprovado | Usa as fotos atuais do álbum |
 | Domínio | `index.html` → `canonical`, `og:image` e JSON-LD com URL absoluta | A prévia de link pode não carregar a imagem em alguns apps |
-| Fotos e legendas | Ver `SELECAO-FOTOS.md` | Já estão com fotos reais do álbum, mas há itens a confirmar |
+
+## WhatsApp
+
+Número comercial: +55 21 99991-8187. Os links `wa.me` já estão no HTML (funcionam sem JS) e o `main.js` os atualiza a partir do `config.js`.
+
+| Sessão | Botão | Mensagem (`data-wa`) |
+|---|---|---|
+| 1 · Hero | Solicitar avaliação para orçamento | `hero` |
+| 3 · Serviços | Solicitar avaliação para orçamento | `hero` |
+| 5 · Trabalhos | Quero avaliar meu caso | `hero` |
+| 8 · Área | Consultar atendimento na minha região | `regiao` |
+| 10 · Contato | Falar pelo WhatsApp | `final` |
+
+O link de WhatsApp da mensagem de erro do formulário também usa `final`. Não há botão flutuante.
+
+## Avaliações (sessão 5)
+
+- **Versão de revisão** (`reviewMode: true`, ou qualquer versão aberta com `?revisao=1` na URL): mostra o bloco "O que nossos clientes dizem" com 5 cartões marcados como "Avaliação de exemplo". Os textos são de preenchimento, sem nomes, notas ou quantidades inventados.
+- **Versão pública** (`reviewMode: false`): o bloco fica oculto até a conexão com avaliações reais.
+- **Com o perfil do Google:** preencher `google` no `config.js` (nota, quantidade, link e comentários conferidos). Os exemplos somem e entram os dados reais, também na versão pública. Se preferir o plugin oficial do Google, ele substitui a lista `[data-review-list]`.
+- **Carrossel:** 3 cartões no desktop, 2 no tablet e 1 no celular, com botões anterior/próximo, indicador "1–3 de 5", rolagem por toque ou teclado e nenhum avanço automático.
 
 ## Formulário
 
-- Envia `multipart/form-data` por POST com estes campos: `nome`, `whatsapp`, `whatsapp_e164`, `cidade_bairro`, `tipo_local`, `mensagem`, `fotos` (0 a N arquivos), `origem`, `pagina`, além de UTMs e gclid/fbclid quando existirem.
+- Envia `multipart/form-data` por POST com estes campos: `nome`, `whatsapp`, `whatsapp_e164`, `cidade_bairro`, `tipo_local`, `mensagem`, `fotos` (0 a 5 arquivos), `origem` e `pagina`, além de UTMs e gclid/fbclid quando existirem.
+- Obrigatórios: nome, WhatsApp, cidade e bairro, tipo de local e descrição. Fotos são opcionais: até 5 imagens, 10 MB cada, nos formatos JPG, PNG, WEBP ou HEIC.
 - O sucesso só aparece quando o destino responde com status 2xx. O destino precisa aceitar CORS da origem do site.
 - Funciona com Formspree (upload de arquivos exige plano pago), Getform, Basin, Make/n8n (webhook) ou um backend próprio.
 - Tem campo anti-spam invisível (`site`), validação acessível e máscara de telefone.
@@ -44,17 +81,19 @@ Se houver Google Tag Manager, a página envia para o `dataLayer`:
 
 ## Decisões de implementação
 
-- **CTAs de WhatsApp** só nas sessões 1, 3, 5, 8 e 10, como pede a copy. Não há botão flutuante.
-- **Mensagens de WhatsApp:** hero e serviços usam a mensagem do hero; área usa a de região; trabalhos e contato usam a mensagem final, que fala em enviar fotos.
+- **Situações × Serviços:** a sessão 2 mantém os 4 cartões. A sessão 3 virou uma lista numerada em duas colunas (uma no celular), com divisórias e sem caixas. O bloco de gestão de resíduos ganhou a foto das toras organizadas no local, e o CTA continua no fim.
+- **Experiência (sessão 4):** o destaque "5 anos" fica abaixo da foto, sem cobrir o profissional nem os equipamentos.
+- **Antes e depois:** sai do carrossel da galeria e vira um conjunto único, com mais espaço, rótulos visíveis e legenda compartilhada. Fica lado a lado no desktop e empilhado no celular.
 - **Vídeos:** tocam sem som, em loop, só quando estão visíveis, com botão de pausa. Quem ativou "reduzir movimento" ou economia de dados vê os controles nativos, sem reprodução automática.
-- **Sessão 5:** a galeria é estática no HTML. As avaliações vêm do `config.js`, e as estrelas usam exatamente a nota informada.
 - **Acessibilidade:** link para pular ao conteúdo, foco visível, rótulos sempre visíveis, erros associados aos campos, acordeão nativo (`details`/`summary`) e contraste AA.
 
 ## Checklist antes de publicar
 
-- [ ] Preencher as pendências do `config.js`
-- [ ] Confirmar os itens de `SELECAO-FOTOS.md`
-- [ ] Testar todos os botões de WhatsApp no celular
+- [ ] Configurar `form.endpoint` e testar o recebimento com e sem fotos
+- [ ] Preencher `privacy.url` e o texto definitivo de `privacy.notice`
+- [ ] Mudar `reviewMode` para `false` (ou conectar as avaliações reais do Google)
+- [ ] Confirmar os itens de `SELECAO-FOTOS.md` e aplicar as fotos escolhidas pelo Lucas
+- [ ] Testar no celular os 5 botões de WhatsApp e a mensagem de cada um
 - [ ] Testar o formulário: sucesso, erro, upload, telefone inválido e campos vazios
 - [ ] Conferir a gratuidade só para Niterói, São Gonçalo, Maricá e Rio de Janeiro
 - [ ] Validar a prévia do link no WhatsApp depois de configurar o domínio
