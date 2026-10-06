@@ -538,7 +538,8 @@
       success.focus();
     }
 
-    function sendByFetch(data) {
+    // keepalive deixa o envio terminar mesmo se o navegador for para segundo plano (só para envios pequenos, sem fotos)
+    function sendByFetch(data, keepalive) {
       var controller = 'AbortController' in window ? new AbortController() : null;
       var timer = controller ? setTimeout(function () { controller.abort(); }, cfg.timeoutMs) : null;
       function clear() { if (timer) clearTimeout(timer); }
@@ -547,6 +548,7 @@
         method: 'POST',
         body: data,
         headers: { Accept: 'application/json' },
+        keepalive: !!keepalive,
         signal: controller ? controller.signal : undefined
       })
         .then(function (res) {
@@ -631,6 +633,48 @@
       });
     }
 
+    /* WhatsApp com os dados do formulário
+       Além do e-mail, o envio abre uma conversa no WhatsApp com os dados já preenchidos.
+       A abertura precisa acontecer dentro do clique, senão o navegador a bloqueia como pop-up:
+       - sem fotos, a conversa abre na hora e o envio (pequeno) segue em segundo plano;
+       - com fotos, a aba abre em espera e só vai para o WhatsApp depois que o envio é confirmado,
+         para o navegador do celular não sair de cena no meio do upload. */
+    var chatLinks = $$('[data-form-chat]');
+
+    function chatUrl(photoCount) {
+      var el = form.elements;
+      var lines = [
+        (wa.messages || {}).formulario || 'Olá! Gostaria de solicitar uma avaliação para orçamento. Seguem meus dados:',
+        '',
+        '*Nome:* ' + el.nome.value.trim(),
+        '*Cidade:* ' + el.cidade.value.trim(),
+        '*Bairro:* ' + el.bairro.value.trim(),
+        '*Tipo de local:* ' + el.tipo_local.value,
+        '',
+        '*Como podemos ajudar:* ' + el.mensagem.value.trim()
+      ];
+      if (photoCount) lines.push('', 'Também enviei ' + (photoCount === 1 ? '1 foto' : photoCount + ' fotos') + ' pelo formulário do site.');
+      return 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(lines.join('\n'));
+    }
+
+    function setChatLinks(url) {
+      chatLinks.forEach(function (a) { a.href = url; });
+    }
+
+    function openWaitingTab() {
+      var tab = window.open('', '_blank');
+      if (!tab) return null;
+      try {
+        tab.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">' +
+          '<meta name="viewport" content="width=device-width, initial-scale=1"><title>Enviando… | Curi Arborismo</title></head>' +
+          '<body style="display:grid;place-items:center;min-height:100vh;margin:0;padding:1.5rem;box-sizing:border-box;' +
+          'background:#283618;color:#FEFAE0;font:500 1.125rem/1.5 system-ui,sans-serif;text-align:center">' +
+          '<p>Enviando sua solicitação e as fotos…<br>O WhatsApp abre em seguida.</p></body></html>');
+        tab.document.close();
+      } catch (err) { /* sem acesso à aba: ela fica em branco até o envio terminar */ }
+      return tab;
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (sending) return;
@@ -660,16 +704,41 @@
       Object.keys(campaign).forEach(function (k) { data.append(k, campaign[k]); });
 
       var photoCount = files.length;
+      var chatPlain = waNumber ? chatUrl(0) : '';
+      var chatWithPhotos = waNumber ? chatUrl(photoCount) : '';
+      var chatTab = null;
+      if (waNumber) {
+        // Os links do sucesso e do erro levam os mesmos dados (o do erro, sem citar fotos que não chegaram)
+        setChatLinks(chatPlain);
+        if (photoCount) {
+          chatTab = openWaitingTab();
+        } else {
+          window.open(chatPlain, '_blank', 'noopener');
+          track('whatsapp_click', { cta_location: 'formulario' });
+        }
+      }
       setSending(true);
 
-      (photoCount && uploadEndpoint ? sendInFrame(data) : sendByFetch(data))
+      (photoCount && uploadEndpoint ? sendInFrame(data) : sendByFetch(data, !photoCount))
         .then(function () {
+          if (waNumber && photoCount) {
+            setChatLinks(chatWithPhotos);
+            // Falha ao redirecionar a aba não pode virar erro de envio: o botão do sucesso cobre esse caso
+            try {
+              if (chatTab && !chatTab.closed) {
+                chatTab.opener = null;
+                chatTab.location.replace(chatWithPhotos);
+                track('whatsapp_click', { cta_location: 'formulario' });
+              }
+            } catch (err) { /* segue para o sucesso */ }
+          }
           // Sucesso somente após confirmação de recebimento pelo destino
           showSuccess();
           track('generate_lead', { form: 'avaliacao_orcamento', fotos: photoCount });
         })
         .catch(function (err) {
           console.error('[Curi] Falha no envio do formulário:', err);
+          if (chatTab && !chatTab.closed) chatTab.close();
           showError();
         })
         .then(function () { setSending(false); });

@@ -1232,6 +1232,7 @@ textarea.input { min-height: 120px; resize: vertical; line-height: 1.5; }
 .form-success:focus { outline: none; }
 .form-success h3 { margin-top: 1.25rem; font-size: 1.75rem; }
 .form-success p { max-width: 26em; margin: .75rem auto 0; color: var(--ink-700); }
+.form-success .btn { margin-top: 1.5rem; }
 .success-icon {
   display: inline-grid;
   place-items: center;

@@ -686,11 +686,18 @@
                 <p class="field-error" id="f-whatsapp-error" hidden></p>
               </div>
 
-              <div class="field field--full" data-field>
-                <label for="f-local">Cidade e bairro do serviço</label>
-                <p class="field-hint" id="f-local-hint">Onde o atendimento será realizado?</p>
-                <input class="input" id="f-local" name="cidade_bairro" type="text" autocomplete="off" maxlength="120" required aria-describedby="f-local-hint f-local-error">
-                <p class="field-error" id="f-local-error" hidden></p>
+              <div class="field" data-field>
+                <label for="f-cidade">Cidade do serviço</label>
+                <p class="field-hint" id="f-cidade-hint">Onde o atendimento será realizado?</p>
+                <input class="input" id="f-cidade" name="cidade" type="text" autocomplete="off" maxlength="80" required aria-describedby="f-cidade-hint f-cidade-error">
+                <p class="field-error" id="f-cidade-error" hidden></p>
+              </div>
+
+              <div class="field" data-field>
+                <label for="f-bairro">Bairro</label>
+                <p class="field-hint" id="f-bairro-hint">Em qual bairro fica o local?</p>
+                <input class="input" id="f-bairro" name="bairro" type="text" autocomplete="off" maxlength="80" required aria-describedby="f-bairro-hint f-bairro-error">
+                <p class="field-error" id="f-bairro-error" hidden></p>
               </div>
 
               <fieldset class="field field--full" data-field aria-describedby="f-tipo-error">
@@ -737,7 +744,7 @@
 
             <div class="form-alert" role="alert" data-form-error hidden>
               <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
-              <p>Não foi possível enviar sua solicitação. Tente novamente ou fale diretamente com a Curi pelo <a href="https://wa.me/5521999918187?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20uma%20avalia%C3%A7%C3%A3o%20para%20or%C3%A7amento.%20Posso%20enviar%20algumas%20fotos%20e%20informa%C3%A7%C3%B5es%20sobre%20a%20%C3%A1rvore%3F" target="_blank" rel="noopener" data-wa="final" data-wa-location="erro-formulario">WhatsApp<span class="sr-only"> (abre o WhatsApp)</span></a>.</p>
+              <p>Não foi possível enviar sua solicitação. Tente novamente ou fale diretamente com a Curi pelo <a href="https://wa.me/5521999918187?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20uma%20avalia%C3%A7%C3%A3o%20para%20or%C3%A7amento.%20Posso%20enviar%20algumas%20fotos%20e%20informa%C3%A7%C3%B5es%20sobre%20a%20%C3%A1rvore%3F" target="_blank" rel="noopener" data-wa="final" data-wa-location="erro-formulario" data-form-chat>WhatsApp<span class="sr-only"> (abre o WhatsApp)</span></a>.</p>
             </div>
 
             <button class="btn btn-dark btn-lg btn-block" type="submit" data-submit>
@@ -750,6 +757,14 @@
             <span class="success-icon"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg></span>
             <h3>Solicitação enviada!</h3>
             <p>Recebemos suas informações. A equipe da Curi Arborismo entrará em contato pelo WhatsApp informado.</p>
+            <!-- O envio também abre uma conversa no WhatsApp com os dados preenchidos (main.js troca o href
+                 dos links data-form-chat). O botão cobre o caso de o navegador não ter aberto a conversa. -->
+            <p>Para agilizar, envie também a sua solicitação pelo WhatsApp. Se a conversa não abriu, use o botão abaixo.</p>
+            <a class="btn btn-primary btn-lg" href="https://wa.me/5521999918187?text=Ol%C3%A1!%20Gostaria%20de%20solicitar%20uma%20avalia%C3%A7%C3%A3o%20para%20or%C3%A7amento.%20Posso%20enviar%20algumas%20fotos%20e%20informa%C3%A7%C3%B5es%20sobre%20a%20%C3%A1rvore%3F" target="_blank" rel="noopener" data-wa="final" data-wa-location="formulario" data-form-chat>
+              <svg class="icon" aria-hidden="true"><use href="#i-whatsapp"/></svg>
+              Abrir conversa no WhatsApp
+              <span class="sr-only">(abre o WhatsApp)</span>
+            </a>
           </div>
         </div>
       </div>

@@ -22,7 +22,10 @@ window.CURI_CONFIG = {
     messages: {
       hero: "Olá! Gostaria de solicitar uma avaliação para orçamento de um serviço de arborismo.",
       regiao: "Olá! Gostaria de saber sobre atendimento da Curi Arborismo na minha região e solicitar uma avaliação para orçamento.",
-      final: "Olá! Gostaria de solicitar uma avaliação para orçamento. Posso enviar algumas fotos e informações sobre a árvore?"
+      final: "Olá! Gostaria de solicitar uma avaliação para orçamento. Posso enviar algumas fotos e informações sobre a árvore?",
+      // Abertura da conversa que o formulário abre ao ser enviado. Depois dela entram os dados preenchidos
+      // (nome, cidade, bairro, tipo de local e descrição). PENDENTE: confirmar a redação com o cliente.
+      formulario: "Olá! Gostaria de solicitar uma avaliação para orçamento. Seguem meus dados:"
     }
   },
 

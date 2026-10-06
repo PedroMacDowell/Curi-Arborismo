@@ -58,6 +58,11 @@ Número comercial: +55 21 99991-8187. Os links `wa.me` já estão no HTML (funci
 
 O link de WhatsApp da mensagem de erro do formulário também usa `final`. Não há botão flutuante.
 
+**Formulário + WhatsApp:** além do e-mail, o envio do formulário abre uma conversa no WhatsApp com os dados preenchidos (nome, cidade, bairro, tipo de local e descrição), depois da abertura definida em `whatsapp.messages.formulario`. A pessoa ainda precisa tocar em enviar dentro do WhatsApp.
+- **Sem fotos:** a conversa abre na hora do clique e o e-mail segue em segundo plano.
+- **Com fotos:** abre uma aba de espera ("Enviando sua solicitação e as fotos…") que só vai para o WhatsApp depois que o envio é confirmado, para o celular não interromper o upload ao trocar de aplicativo. Se o envio falhar, a aba fecha e aparece a mensagem de erro.
+- A tela de sucesso tem o botão "Abrir conversa no WhatsApp" com a mesma mensagem, para quando o navegador não abre a conversa sozinho (navegadores embutidos de Instagram e Facebook, por exemplo). O link da mensagem de erro também leva os dados preenchidos.
+
 ## Avaliações (sessão 5)
 
 - **Versão de revisão** (`reviewMode: true`, ou qualquer versão aberta com `?revisao=1` na URL): mostra o bloco "O que nossos clientes dizem" com 5 cartões marcados como "Avaliação de exemplo". Os textos são de preenchimento, sem nomes, notas ou quantidades inventados.
@@ -72,16 +77,17 @@ O link de WhatsApp da mensagem de erro do formulário também usa `final`. Não 
 - **Para trocar o e-mail:** alterar `form.to`, fazer um envio pela página e ativar pelo link que chegar na nova caixa.
 - **Sem fotos:** vai por `fetch` para `form.endpoint` (`/ajax`), que responde em JSON.
 - **Com fotos:** o endereço `/ajax` do FormSubmit entrega os campos, mas descarta os anexos. Por isso o envio vai por POST clássico para `form.uploadEndpoint`, dentro de um iframe oculto, e a pessoa não sai da página. Como a resposta de outra origem não pode ser lida, a confirmação é o FormSubmit redirecionar o iframe para `enviado.html` (campo `_next`). Se isso não acontecer, aparece a mensagem de erro.
-- Envia `multipart/form-data` por POST com estes campos: `nome`, `whatsapp`, `whatsapp_e164`, `cidade_bairro`, `tipo_local`, `mensagem`, `foto_1` a `foto_5` (0 a 5 arquivos), `origem` e `pagina`, além de UTMs e gclid/fbclid quando existirem. Os campos de `form.extraFields` (assunto e formato do e-mail) vão junto.
-- Obrigatórios: nome, WhatsApp, cidade e bairro, tipo de local e descrição. Fotos são opcionais: até 5 imagens nos formatos JPG, PNG, WEBP ou HEIC, somando até 10 MB (limite de anexos do FormSubmit, em `form.maxTotalMB`).
+- Envia `multipart/form-data` por POST com estes campos: `nome`, `whatsapp`, `whatsapp_e164`, `cidade`, `bairro`, `tipo_local`, `mensagem`, `foto_1` a `foto_5` (0 a 5 arquivos), `origem` e `pagina`, além de UTMs e gclid/fbclid quando existirem. Os campos de `form.extraFields` (assunto e formato do e-mail) vão junto.
+- Obrigatórios: nome, WhatsApp, cidade, bairro, tipo de local e descrição. Fotos são opcionais: até 5 imagens nos formatos JPG, PNG, WEBP ou HEIC, somando até 10 MB (limite de anexos do FormSubmit, em `form.maxTotalMB`).
 - O sucesso só aparece quando o destino confirma o recebimento. Sem fotos: status 2xx e, se a resposta for JSON, sem `success: "false"` (é assim que o FormSubmit avisa que o e-mail ainda não foi ativado). Com fotos: o redirecionamento para `enviado.html`.
 - Para usar outro destino (Getform, Basin, Make/n8n ou backend próprio), basta trocar `form.endpoint` e ajustar `fileField`, `extraFields` e os limites. Se ele aceitar anexos por `fetch` (com CORS liberado para a origem do site), deixe `form.uploadEndpoint` vazio.
 - Tem campo anti-spam invisível (`site`), validação acessível e máscara de telefone.
+- O texto do e-mail é o padrão do FormSubmit (em inglês, com "Someone just submitted your form on…") e não pode ser alterado: o serviço só deixa configurar o assunto (`_subject`) e o formato (`_template`), em `form.extraFields`. Para um e-mail com texto e identidade próprios é preciso trocar o destino.
 
 ## Métricas
 
 Se houver Google Tag Manager, a página envia para o `dataLayer`:
-- `whatsapp_click`, com `cta_location` = hero | servicos | trabalhos | area | contato | erro-formulario
+- `whatsapp_click`, com `cta_location` = hero | servicos | trabalhos | area | contato | formulario | erro-formulario
 - `generate_lead`, após envio confirmado do formulário
 - `form_error`
 
