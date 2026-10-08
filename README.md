@@ -107,5 +107,5 @@ Se houver Google Tag Manager, a página envia para o `dataLayer`:
 - [ ] Confirmar os itens de `SELECAO-FOTOS.md` e aplicar as fotos escolhidas pelo Lucas
 - [ ] Testar no celular os 5 botões de WhatsApp e a mensagem de cada um
 - [ ] Testar o formulário: sucesso, erro, upload, telefone inválido e campos vazios
-- [ ] Conferir a gratuidade só para Niterói, São Gonçalo, Maricá e Rio de Janeiro
+- [ ] Conferir a gratuidade só para Niterói
 - [ ] Validar a prévia do link no WhatsApp depois de configurar o domínio

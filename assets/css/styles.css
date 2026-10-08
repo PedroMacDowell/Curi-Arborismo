@@ -649,6 +649,11 @@ main:focus { outline: none; }
 }
 @media (min-width: 720px) { .gallery { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; } }
 @media (min-width: 1024px) { .gallery { grid-template-columns: repeat(3, 1fr); } }
+/* Item que sobra sozinho na última linha fica centralizado */
+@media (min-width: 720px) and (max-width: 1023px) {
+  .gallery-item:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; width: calc(50% - .625rem); }
+}
+@media (min-width: 1024px) { .gallery-item:last-child:nth-child(3n + 1) { grid-column: 2; } }
 
 .gallery-item { display: flex; flex-direction: column; gap: .75rem; }
 .gallery-item figcaption { font-size: .9375rem; line-height: 1.45; color: var(--ink-500); }
@@ -969,6 +974,7 @@ main:focus { outline: none; }
 
 .city-list { display: grid; gap: .625rem; margin-top: 1.25rem; }
 @media (min-width: 480px) and (max-width: 959px) { .city-list { grid-template-columns: repeat(2, 1fr); } }
+.city-list li:only-child { grid-column: 1 / -1; }
 .city-list li {
   display: flex;
   align-items: center;
