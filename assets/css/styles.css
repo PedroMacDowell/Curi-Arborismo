@@ -739,6 +739,7 @@ main:focus { outline: none; }
 
 /* Avaliações (carrossel sem avanço automático) */
 .reviews {
+  container-type: inline-size; /* a largura dos cartões do carrossel segue a do bloco (cqi) */
   margin-top: clamp(2.5rem, 2rem + 2vw, 3.5rem);
   padding: clamp(1.25rem, .75rem + 2vw, 2.25rem);
   border-radius: var(--radius-lg);
@@ -794,28 +795,32 @@ main:focus { outline: none; }
   color: var(--kombu);
 }
 
+/* Carrossel 3D: o cartão do centro fica de frente e os vizinhos giram para trás, como em um cilindro.
+   Continua sendo uma lista com rolagem e encaixe; o main.js informa a posição de cada cartão
+   em --pos (0 no centro, -1 e 1 nos vizinhos) e --dist (a distância, sem sinal). */
 .review-track {
-  --gap: 1rem;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 100%;
-  gap: var(--gap);
+  --card-w: 20rem;
+  position: relative;
+  display: flex;
   margin: 0;
-  padding: 0;
   list-style: none;
   overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   scrollbar-width: none;
 }
+@supports (width: 1cqi) { .review-track { --card-w: min(80cqi, 23rem); } }
+/* A folga lateral deixa o primeiro e o último cartão chegarem ao centro.
+   O seletor mais específico vence o padding: 0 das listas com role="list". */
+.reviews .review-track { padding: 1.75rem calc(50% - var(--card-w) / 2) 2.25rem; }
 .review-track::-webkit-scrollbar { display: none; }
 .review-track:focus-visible { outline-offset: 4px; }
-@media (min-width: 720px) { .review-track { grid-auto-columns: calc((100% - var(--gap)) / 2); } }
-@media (min-width: 1024px) { .review-track { --gap: 1.25rem; grid-auto-columns: calc((100% - var(--gap) * 2) / 3); } }
 
 .review-card {
   display: flex;
+  flex: 0 0 var(--card-w);
   flex-direction: column;
   gap: .875rem;
   min-width: 0;
@@ -823,8 +828,17 @@ main:focus { outline: none; }
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--card);
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  cursor: pointer;
+  opacity: calc(1 - var(--dist, 0) * .4);
+  transform:
+    perspective(1100px)
+    translateX(calc(var(--pos, 0) * -16%))
+    translateZ(calc(var(--dist, 0) * -110px))
+    rotateY(calc(var(--pos, 0) * 36deg));
 }
+.review-card.is-active { cursor: auto; box-shadow: var(--shadow); }
+.review-card .stars { align-self: flex-start; font-size: 1.125rem; }
 .review-card--demo { border: 1.5px dashed rgba(113, 136, 97, .6); }
 .demo-tag {
   align-self: flex-start;
@@ -837,8 +851,7 @@ main:focus { outline: none; }
   letter-spacing: .06em;
   text-transform: uppercase;
 }
-.review-quote { width: 30px; height: 30px; color: var(--fawn); }
-.review-card blockquote p { font-size: 1rem; color: var(--ink-700); }
+.review-card blockquote p { font-size: 1rem; color: var(--ink-700); white-space: pre-line; } /* mantém as quebras de linha do comentário */
 .review-author {
   display: flex;
   align-items: center;
@@ -856,6 +869,15 @@ main:focus { outline: none; }
   border: 1.5px dashed rgba(113, 136, 97, .6);
   border-radius: 50%;
   background: var(--sage-100);
+}
+/* Avaliação real: inicial do nome no lugar do círculo vazio */
+.review-avatar--initial {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: var(--kombu);
+  color: var(--fawn);
+  font-size: 1.0625rem;
 }
 
 .text-link {

@@ -92,8 +92,9 @@
   })();
 
   /* Avaliações ------------------------------------------------------------ */
-  // Com dados do Google no config.js: mostra nota, quantidade e comentários reais.
-  // Sem eles: os 5 cartões de exemplo aparecem só na versão de revisão (reviewMode ou ?revisao=1).
+  // Com dados do Google no config.js: mostra nota, quantidade e, se houver, os comentários reais.
+  // Os 5 cartões de exemplo aparecem só na versão de revisão (reviewMode ou ?revisao=1) e enquanto
+  // não houver comentários reais.
   (function reviews() {
     var box = $('[data-reviews]');
     if (!box) return;
@@ -101,12 +102,9 @@
     var g = CONFIG.google;
     var hasGoogle = !!(g && g.rating > 0 && g.count > 0 && g.url);
     var reviewMode = CONFIG.reviewMode === true || new URLSearchParams(location.search).has('revisao');
+    var demoNote = $('[data-reviews-demo-note]', box);
 
     if (hasGoogle) {
-      $$('[data-review-demo]', list).forEach(function (el) { el.remove(); });
-      var demoNote = $('[data-reviews-demo-note]', box);
-      if (demoNote) demoNote.remove();
-
       var rating = Math.min(Math.max(Number(g.rating), 0), 5);
       var ratingText = rating.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
       $('[data-rating-value]', box).textContent = ratingText;
@@ -119,24 +117,16 @@
       link.href = g.url;
       link.hidden = false;
 
-      (g.reviews || []).forEach(function (r) {
-        if (!r || !r.text) return;
-        var li = document.createElement('li');
-        li.className = 'review-card';
-        li.innerHTML = '<svg class="review-quote" aria-hidden="true"><use href="#i-quote"/></svg>';
-        var quote = document.createElement('blockquote');
-        var p = document.createElement('p');
-        p.textContent = r.text;
-        quote.appendChild(p);
-        li.appendChild(quote);
-        if (r.author) {
-          var author = document.createElement('p');
-          author.className = 'review-author';
-          author.textContent = r.author;
-          li.appendChild(author);
-        }
-        list.appendChild(li);
-      });
+      var real = (g.reviews || []).filter(function (r) { return r && r.text; });
+      if (real.length || !reviewMode) {
+        $$('[data-review-demo]', list).forEach(function (el) { el.remove(); });
+        if (demoNote) demoNote.remove();
+      } else if (demoNote) {
+        demoNote.textContent = 'Comentários de exemplo, para aprovar o layout. Eles dão lugar aos comentários reais do Google assim que forem cadastrados.';
+      }
+      real.forEach(function (r) { list.appendChild(reviewCard(r)); });
+      // Sem comentários, ficam só a nota e o link (nada de lista vazia)
+      list.hidden = !$$('.review-card', list).length;
     } else if (!reviewMode) {
       return; // versão pública sem avaliações reais: o bloco continua oculto
     }
@@ -145,7 +135,48 @@
     carousel(box);
   })();
 
-  // Carrossel por rolagem com encaixe: 3 cartões no desktop, 2 no tablet, 1 no celular. Sem avanço automático.
+  // Cartão de uma avaliação real: estrelas (quando a nota vem informada), comentário e nome do autor
+  function reviewCard(r) {
+    var li = document.createElement('li');
+    li.className = 'review-card';
+
+    var rating = Math.min(Math.max(Number(r.rating) || 0, 0), 5);
+    if (rating) {
+      var stars = document.createElement('span');
+      stars.className = 'stars';
+      stars.setAttribute('role', 'img');
+      stars.setAttribute('aria-label', 'Nota ' + rating.toLocaleString('pt-BR') + ' de 5');
+      stars.style.setProperty('--rating', rating);
+      li.appendChild(stars);
+    }
+
+    var quote = document.createElement('blockquote');
+    var p = document.createElement('p');
+    p.textContent = r.text;
+    quote.appendChild(p);
+    li.appendChild(quote);
+
+    var name = String(r.author || '').trim();
+    var author = document.createElement('p');
+    author.className = 'review-author';
+    var avatar = document.createElement('span');
+    avatar.className = 'review-avatar review-avatar--initial';
+    avatar.setAttribute('aria-hidden', 'true');
+    avatar.textContent = name ? name.charAt(0).toUpperCase() : '';
+    var label = document.createElement('span');
+    label.textContent = name || 'Cliente';
+    var source = document.createElement('small');
+    source.textContent = 'Avaliação no Google';
+    label.appendChild(source);
+    author.appendChild(avatar);
+    author.appendChild(label);
+    li.appendChild(author);
+    return li;
+  }
+
+  // Carrossel 3D: o cartão do centro fica de frente e os vizinhos giram para trás (o desenho está no CSS).
+  // A lista continua rolando com encaixe (toque, teclado e botões), sem avanço automático; aqui cada cartão
+  // recebe a sua posição em relação ao centro: --pos (0 no centro, -1 e 1 nos vizinhos) e --dist.
   function carousel(box) {
     var track = $('[data-review-list]', box);
     var prev = $('[data-carousel-prev]', box);
@@ -154,15 +185,13 @@
     var controls = $('[data-carousel-controls]', box);
     var cards = $$('.review-card', track);
     if (!track || !cards.length) { if (controls) controls.hidden = true; return; }
+    var active = 0; // cartão mais perto do centro agora
+    var target = 0; // cartão para onde os botões estão levando (cliques seguidos se acumulam)
 
-    function step() {
-      if (cards.length < 2) return track.clientWidth;
-      return cards[1].getBoundingClientRect().left - cards[0].getBoundingClientRect().left;
-    }
-    function visibleCount(s) {
-      var gap = s - cards[0].getBoundingClientRect().width;
-      return Math.max(1, Math.min(cards.length, Math.round((track.clientWidth + gap) / s)));
-    }
+    // offsetLeft não muda com o transform dos cartões, ao contrário de getBoundingClientRect
+    function centerOf(card) { return card.offsetLeft + card.offsetWidth / 2; }
+    function leftFor(i) { return centerOf(cards[i]) - track.clientWidth / 2; }
+
     // aria-disabled em vez de disabled: o foco não se perde quando o botão chega ao fim
     function setDisabled(btn, off) {
       btn.setAttribute('aria-disabled', String(off));
@@ -170,33 +199,65 @@
 
     var lastText = '';
     function update() {
-      var s = step();
-      var visible = visibleCount(s);
-      var total = cards.length;
-      var first = Math.max(0, Math.min(Math.round(track.scrollLeft / s), total - visible));
-      var text = visible > 1
-        ? (first + 1) + '–' + (first + visible) + ' de ' + total
-        : (first + 1) + ' de ' + total;
+      var mid = track.scrollLeft + track.clientWidth / 2;
+      var nearest = Infinity;
+      cards.forEach(function (card, i) {
+        var pos = (centerOf(card) - mid) / card.offsetWidth;
+        var dist = Math.abs(pos);
+        if (dist < nearest) { nearest = dist; active = i; }
+        card.style.setProperty('--pos', Math.max(-2, Math.min(2, pos)).toFixed(3));
+        card.style.setProperty('--dist', Math.min(dist, 2).toFixed(3));
+        card.style.zIndex = String(100 - Math.round(Math.min(dist, 9) * 10)); // o do centro por cima
+      });
+      cards.forEach(function (card, i) { card.classList.toggle('is-active', i === active); });
+
+      var text = (active + 1) + ' de ' + cards.length;
       if (text !== lastText) { status.textContent = text; lastText = text; }
-      setDisabled(prev, track.scrollLeft <= 2);
-      setDisabled(next, track.scrollLeft + track.clientWidth >= track.scrollWidth - 2);
-      controls.hidden = total <= visible;
+      setDisabled(prev, active === 0);
+      setDisabled(next, active === cards.length - 1);
+      controls.hidden = cards.length < 2;
     }
 
-    function go(dir) {
-      track.scrollBy({ left: dir * step(), behavior: reduceMotion ? 'auto' : 'smooth' });
+    function go(i) {
+      target = Math.max(0, Math.min(cards.length - 1, i));
+      track.scrollTo({ left: leftFor(target), behavior: reduceMotion ? 'auto' : 'smooth' });
     }
-    prev.addEventListener('click', function () { if (prev.getAttribute('aria-disabled') !== 'true') go(-1); });
-    next.addEventListener('click', function () { if (next.getAttribute('aria-disabled') !== 'true') go(1); });
+    // Sem animação: a rolagem suave do CSS é desligada só durante o salto
+    function jump(i) {
+      target = i;
+      track.style.scrollBehavior = 'auto';
+      track.scrollLeft = leftFor(i);
+      track.style.scrollBehavior = '';
+    }
+
+    prev.addEventListener('click', function () { go(target - 1); });
+    next.addEventListener('click', function () { go(target + 1); });
+    cards.forEach(function (card, i) {
+      card.addEventListener('click', function () { if (i !== active) go(i); });
+    });
+    track.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      go(target + (e.key === 'ArrowRight' ? 1 : -1));
+    });
 
     var ticking = false;
+    var settle = null;
     function schedule() {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(function () { update(); ticking = false; });
     }
-    track.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
+    track.addEventListener('scroll', function () {
+      schedule();
+      // Quando a rolagem para (botão, toque ou teclado), o destino passa a ser o cartão que ficou no centro
+      clearTimeout(settle);
+      settle = setTimeout(function () { update(); target = active; }, 140);
+    }, { passive: true });
+    window.addEventListener('resize', function () { jump(active); schedule(); });
+
+    // Começa no segundo cartão para já haver vizinhos dos dois lados
+    if (cards.length >= 3) jump(1);
     update();
   }
 

@@ -39,7 +39,7 @@ Segue o manual "Identidade visual Curi Arborismo – v01".
 |---|---|---|
 | Ativação do e-mail do formulário | Fazer um envio pela página e clicar em "Activate Form" no e-mail que o FormSubmit manda para `curiarborismogestao@gmail.com` (`config.js` → `form.to`) | O envio mostra a mensagem de erro com link para o WhatsApp, e esse primeiro envio não é entregue. **Depois de ativar, confirmar que os dados e os anexos chegam** |
 | Política de privacidade | `config.js` → `privacy.url` e `privacy.notice` (texto provisório) | O aviso aparece junto ao formulário sem link, e o link do rodapé fica oculto |
-| Avaliações do Google | `config.js` → `google` (ou trocar o bloco pelo plugin do Google) | Só a versão de revisão mostra os 5 cartões de exemplo |
+| Avaliações do Google | `config.js` → `google`: atualizar `rating`, `count` e `reviews` à mão quando entrarem avaliações novas (ou ligar a API do Google para isso ser automático) | O bloco mostra a nota e a quantidade conferidas em 13/10/2026 (5,0 com 15 avaliações), o link para o perfil e os 11 comentários com texto daquela data |
 | Versão pública | `config.js` → `reviewMode: false` | A página está como **versão de revisão** (`reviewMode: true`) |
 | Fotos finais | Ver `SELECAO-FOTOS.md`. A escolha é do Lucas, depois que o restante for aprovado | Usa as fotos atuais do álbum |
 | Domínio | `index.html` → `canonical`, `og:image` e JSON-LD com URL absoluta | A prévia de link pode não carregar a imagem em alguns apps |
@@ -67,8 +67,10 @@ O link de WhatsApp da mensagem de erro do formulário também usa `final`. Não 
 
 - **Versão de revisão** (`reviewMode: true`, ou qualquer versão aberta com `?revisao=1` na URL): mostra o bloco "O que nossos clientes dizem" com 5 cartões marcados como "Avaliação de exemplo". Os textos são de preenchimento, sem nomes, notas ou quantidades inventados.
 - **Versão pública** (`reviewMode: false`): o bloco fica oculto até a conexão com avaliações reais.
-- **Com o perfil do Google:** preencher `google` no `config.js` (nota, quantidade, link e comentários conferidos). Os exemplos somem e entram os dados reais, também na versão pública. Se preferir o plugin oficial do Google, ele substitui a lista `[data-review-list]`.
-- **Carrossel:** 3 cartões no desktop, 2 no tablet e 1 no celular, com botões anterior/próximo, indicador "1–3 de 5", rolagem por toque ou teclado e nenhum avanço automático.
+- **Com o perfil do Google** (situação atual): `google` no `config.js` traz a nota, a quantidade, o link do perfil e 11 comentários, copiados sem edição em 13/10/2026 (as outras 4 avaliações só têm estrelas). Os exemplos somem e entram os dados reais, também na versão pública. Cada item de `reviews` (`author`, `rating` e `text`) vira um cartão com estrelas, comentário e nome. Sem itens, a versão de revisão mantém os cartões de exemplo para aprovar o layout, e a versão pública mostra só a nota e o link "Ver avaliações no Google".
+- **Os números não se atualizam sozinhos.** O link abre sempre a lista atual no Google, mas a nota e a quantidade exibidas na página são valores fixos do `config.js`. Para atualização automática é preciso buscar os dados na API oficial do Google (Places), que exige uma chave de uma conta Google Cloud com faturamento ativado e devolve nota, total e até 5 comentários, ou usar um widget de terceiros no lugar da lista `[data-review-list]`.
+- **Identificador do perfil (place ID):** `ChIJfU25b_8KZ08RMcOabCtAR7Y`. Serve para o link de avaliações e para a API.
+- **Carrossel 3D:** o cartão do centro fica de frente e os vizinhos giram para trás, como em um cilindro. Continua sendo uma lista com rolagem e encaixe: funciona por toque, pelas setas do teclado, pelos botões anterior/próximo e clicando em um cartão lateral, com o indicador "2 de 5" e sem avanço automático. O `main.js` informa a posição de cada cartão (`--pos` e `--dist`) e o CSS desenha a rotação.
 
 ## Formulário
 
@@ -103,7 +105,8 @@ Se houver Google Tag Manager, a página envia para o `dataLayer`:
 
 - [ ] Ativar `curiarborismogestao@gmail.com` pelo link do FormSubmit e testar o recebimento com e sem fotos
 - [ ] Preencher `privacy.url` e o texto definitivo de `privacy.notice`
-- [ ] Mudar `reviewMode` para `false` (ou conectar as avaliações reais do Google)
+- [ ] Mudar `reviewMode` para `false`
+- [ ] Conferir a nota e a quantidade de avaliações do Google em `config.js` → `google`
 - [ ] Confirmar os itens de `SELECAO-FOTOS.md` e aplicar as fotos escolhidas pelo Lucas
 - [ ] Testar no celular os 5 botões de WhatsApp e a mensagem de cada um
 - [ ] Testar o formulário: sucesso, erro, upload, telefone inválido e campos vazios

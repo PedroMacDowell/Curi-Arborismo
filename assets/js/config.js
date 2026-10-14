@@ -69,16 +69,32 @@ window.CURI_CONFIG = {
     linkSentence: "Saiba mais na {link}."
   },
 
-  // PENDENTE: dados conferidos do perfil no Google. Enquanto for null, a versão pública não mostra o bloco.
-  // Quando preenchido, substitui os cartões de exemplo (mesmo na versão de revisão).
-  // Exemplo de preenchimento (não publicar valores fictícios):
-  // google: {
-  //   rating: 4.9,
-  //   count: 37,
-  //   url: "https://g.page/...",
-  //   reviews: [
-  //     { author: "Nome público do autor", text: "Texto integral do comentário." }
-  //   ]
-  // },
-  google: null
+  // Perfil da Curi Arborismo no Google. Com null, o bloco volta aos cartões de exemplo (só na versão de revisão).
+  // Nota e quantidade conferidas no perfil em 13/10/2026. São valores fixos, não se atualizam sozinhos:
+  // quando entrarem avaliações novas, é preciso corrigir os dois números aqui.
+  // O link usa o identificador do perfil (placeid) e abre sempre a lista atual de avaliações.
+  // Cada item de `reviews` vira um cartão do carrossel 3D, com estrelas, texto e nome:
+  // { author: "Nome público do autor", rating: 5, text: "Texto integral do comentário." }
+  // Os 11 comentários abaixo vieram do perfil em 13/10/2026, na ordem "Mais relevantes" e sem edição
+  // (\n é quebra de linha). As outras 4 avaliações só têm estrelas, sem texto, e por isso não viram cartão.
+  // Comentários novos também precisam ser acrescentados aqui à mão.
+  // Sem itens, a versão de revisão mostra os cartões de exemplo e a versão pública, só a nota e o link.
+  google: {
+    rating: 5.0,
+    count: 15,
+    url: "https://search.google.com/local/reviews?placeid=ChIJfU25b_8KZ08RMcOabCtAR7Y",
+    reviews: [
+      { author: "Glaucio Silva", rating: 5, text: "Esse é bom mesmo na profissão super indico 👏👊🫡" },
+      { author: "Felipe Seixas", rating: 5, text: "O melhor de todos!!\nServiço impecável!!\nRecomendo." },
+      { author: "Jose De Assunção", rating: 5, text: "Empresa muito boa, totalmente capacitados e instruídos sobre o assunto, não são os famosos Zé do Facão que tem por ai..." },
+      { author: "Allan Nascimento", rating: 5, text: "Super indico os profissionais!!" },
+      { author: "Jonas Monteiro", rating: 5, text: "Otimo trabalho, rapido, Limpo e muito profissional." },
+      { author: "Yuri Seoane", rating: 5, text: "Já tive um pé de graviola e um coqueiro removidos por eles e são extremamente profissionais e atenciosos. Super recomendo 10/10" },
+      { author: "Raphael Silveira", rating: 5, text: "Trabalho excelente, equipe de primeira !" },
+      { author: "Gabriel Renault", rating: 5, text: "Tive uma experiência muito boa! Resolveu o meu problema e todos muito educados! Voltarei a utilizar os serviços e super recomendo!" },
+      { author: "Mello Ian", rating: 5, text: "Excelente trabalho, empresa de confiança, recomendo" },
+      { author: "Cauê Trindade", rating: 5, text: "Excelente profissional. Pontual, organizado, detalhista. Indico para todos, pode confiar!" },
+      { author: "Matheus Zambrotti", rating: 5, text: "Equipe muito profissional. Serviço foi melhor do que o esperado, desde a poda a coleta dos resíduos. Parabéns ao Curi e a equipe!" }
+    ]
+  }
 };
